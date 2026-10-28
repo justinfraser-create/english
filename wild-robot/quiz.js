@@ -57,7 +57,14 @@
     for (var i = 0; i < PARTS.length; i++) if (PARTS[i].number === q.part) return PARTS[i];
     return null;
   }
-  function pagesFor(q) { var pt = partOf(q); return pt ? pt.pages : C.pages; }
+  // A chapter's pages are stored as [first, last]; expand them so every page in the chapter can be chosen.
+  function rangePages(a) {
+    if (a.length !== 2) return a;
+    var out = [];
+    for (var p = a[0]; p <= a[1]; p++) out.push(p);
+    return out;
+  }
+  function pagesFor(q) { var pt = partOf(q); return pt ? pt.pages : rangePages(C.pages); }
   function pageSpan(pages) { return pages[0] === pages[pages.length - 1] ? String(pages[0]) : pages[0] + "–" + pages[pages.length - 1]; }
 
   /* ---------- Matching typed sentence openings ---------- */
