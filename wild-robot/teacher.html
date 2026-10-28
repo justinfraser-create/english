@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Wild Robot Results</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="quiz.css">
+<style>
+  .t-wrap { max-width: 72rem; }
+  .row-between { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; }
+  .tabs { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .tabs button { border: 1.5px solid var(--line); background: var(--surface); border-radius: 99px; padding: .45rem 1rem; cursor: pointer; font-weight: 700; min-height: 44px; }
+  .tabs button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  .stats { display: flex; flex-wrap: wrap; gap: 1rem 2.5rem; }
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: .95rem; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: .6rem .7rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); background: var(--bg); position: sticky; top: 0; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover, tbody tr[aria-selected="true"] { background: var(--accent-soft); }
+  td.num, th.num { text-align: right; }
+  .pill { display: inline-block; font-size: .78rem; font-weight: 700; padding: .1rem .5rem; border-radius: 99px; }
+  .pill.todo { background: var(--proof-soft); color: var(--proof); }
+  .pill.done { background: var(--good-soft); color: var(--good); }
+  .pill.retry { background: var(--accent-soft); color: var(--accent); }
+  .lvl-hi { color: var(--good); font-weight: 700; }
+  .lvl-mid { color: var(--proof); font-weight: 700; }
+  .lvl-lo { color: var(--bad); font-weight: 700; }
+  .reteach { list-style: none; margin: 0; padding: 0; display: grid; }
+  .reteach li { display: grid; grid-template-columns: 4.5rem 1fr; gap: .8rem; padding: .7rem 0; border-top: 1px solid var(--line); align-items: start; }
+  .reteach li:first-child { border-top: 0; }
+  .reteach .pct { font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; line-height: 1.1; }
+  .q-list { list-style: none; margin: 0; padding: 0; display: grid; }
+  .q-list > li { display: grid; grid-template-columns: 1fr auto; gap: .3rem 1rem; padding: .8rem 0; border-top: 1px solid var(--line); }
+  .q-list > li:first-child { border-top: 0; }
+  .q-list .r-mark { grid-column: 2; grid-row: 1 / span 3; font-family: var(--font-mono); font-weight: 600; }
+  .q-list .r-detail { display: grid; gap: .2rem; font-size: .95rem; min-width: 0; }
+  .mark-input { display: flex; align-items: center; gap: .4rem; font-family: var(--font-mono); font-weight: 600; }
+  .mark-input input { width: 4rem; font: inherit; padding: .4rem .5rem; border: 1.5px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); text-align: right; }
+  .msg { font-size: .95rem; }
+  .msg.bad { color: var(--bad); }
+  .msg.good { color: var(--good); }
+</style>
+</head>
+<body>
+<header class="banner">
+  <div class="wrap t-wrap">
+    <p class="eyebrow">Teacher only &middot; The Wild Robot</p>
+    <h1>Class results</h1>
+  </div>
+</header>
+<main class="wrap t-wrap" id="app"></main>
+<script src="config.js"></script>
+<script src="teacher.js"></script>
+</body>
+</html>
