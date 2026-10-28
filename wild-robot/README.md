@@ -18,6 +18,7 @@ Every chapter covers six reading skills: locating directly stated information, c
 |---|---|
 | `index.html` | Chapter list (student home page) |
 | `chapter-50.html`, `chapter-51.html` | One page per chapter: the questions are in the `window.CHAPTER` block |
+| `chapters-53-55-57.html` | Combined page for Chapters 53 and 55–57 (see below) |
 | `quiz.js`, `quiz.css` | Shared quiz engine and styles |
 | `config.js` | Settings: Google Apps Script URL and optional class list |
 | `teacher.html`, `teacher.js` | Teacher results page (needs the teacher key) |
@@ -26,3 +27,13 @@ Every chapter covers six reading skills: locating directly stated information, c
 ## Adding a chapter
 
 Copy a chapter page, rename it (e.g. `chapter-52.html`), update the banner and the `window.CHAPTER` data, then add a link on `index.html`. The teacher page picks up new chapters automatically.
+
+## Combining chapters on one page
+
+`chapters-53-55-57.html` shows how. In the `window.CHAPTER` block:
+
+- `number` is the first chapter (53). Results save and group under this number, so don't also make a separate page with the same number.
+- `label` (e.g. `"Chapters 53 & 55–57"`) replaces "Chapter 53" on the student and teacher pages.
+- `parts` lists each chapter with its own title and pages.
+- Each question has `part: 55` (etc.). Its page buttons only show that chapter's pages, and the question shows which chapter it is about. Questions that cover several chapters use `parts: "Chapters 55–57"` instead and show every page.
+

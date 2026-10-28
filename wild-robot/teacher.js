@@ -84,6 +84,12 @@
     rows.forEach(function (r) { seen[r.chapter] = r.chapterTitle; });
     return Object.keys(seen).map(Number).sort(function (a, b) { return a - b; });
   }
+  /* Combined pages save their title as "Chapters 53 & 55–57: …", so the tab shows the full chapter range. */
+  function chapterName(c) {
+    var t = "";
+    rows.forEach(function (r) { if (Number(r.chapter) === c) t = String(r.chapterTitle || ""); });
+    return /^Chapters /.test(t) ? t.split(":")[0] : "Chapter " + c;
+  }
   function chapterRows() {
     var list = rows.filter(function (r) { return Number(r.chapter) === chapter; });
     list.sort(function (a, b) {
@@ -138,12 +144,12 @@
     app.innerHTML =
       '<div class="row-between">' +
         '<div class="tabs" role="group" aria-label="Chapter">' + chs.map(function (c) {
-          return '<button type="button" data-ch="' + c + '" aria-pressed="' + (c === chapter) + '">Chapter ' + c + "</button>";
+          return '<button type="button" data-ch="' + c + '" aria-pressed="' + (c === chapter) + '">' + esc(chapterName(c)) + "</button>";
         }).join("") + "</div>" +
         '<div class="actions"><button class="btn ghost" id="forget">Lock</button><button class="btn" id="refresh">Refresh</button></div>' +
       "</div>" +
       '<section class="sheet">' +
-        "<h2>Chapter " + chapter + ": " + esc(title) + "</h2>" +
+        "<h2>" + (/^Chapters /.test(title) ? esc(title) : "Chapter " + chapter + ": " + esc(title)) + "</h2>" +
         '<div class="stats">' +
           '<div class="score"><span class="big">' + firsts.length + '</span><span class="lbl">Students finished</span></div>' +
           '<div class="score"><span class="big ' + lvl(avg) + '">' + avg + '%</span><span class="lbl">Average computer score (first try)</span></div>' +

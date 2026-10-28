@@ -139,6 +139,21 @@ textarea { min-height: 9rem; resize: vertical; line-height: 1.5; }
 .facts span { font-size: .95rem; }
 .facts b { font-family: var(--font-mono); font-weight: 600; }
 
+/* Combined pages: the chapters on this page, and which chapter each question is about */
+.part-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.part-list li {
+  display: grid; grid-template-columns: 3.2rem 1fr auto; gap: .75rem; align-items: baseline;
+  padding: .55rem 0; border-bottom: 1px solid var(--line);
+}
+.part-list li > span:first-child { color: var(--accent); font-weight: 600; }
+.part-list li > span:nth-child(2) { font-weight: 700; }
+.q-part { color: var(--ink); font-weight: 700; }
+.r-part {
+  font-family: var(--font-mono); font-size: .74rem; font-weight: 600; color: var(--accent);
+  background: var(--accent-soft); border-radius: 4px; padding: .05rem .4rem; vertical-align: .1em;
+}
+.ch-num.ch-range { font-size: 1.15rem; line-height: 1.15; min-width: 4.2ch; }
+
 /* Progress */
 .progress { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
 .progress div { height: 100%; background: var(--accent); border-radius: 99px; transition: width .3s ease; }

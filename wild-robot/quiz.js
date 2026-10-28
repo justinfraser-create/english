@@ -1,5 +1,10 @@
 /* The Wild Robot – chapter quiz engine.
    Each chapter page defines window.CHAPTER = { number, title, pages, questions } and loads this file.
+   Combined pages (several chapters on one page) also set:
+     label – shown instead of "Chapter N", e.g. "Chapters 53 & 55–57"
+     parts – [{ number, title, pages }] one entry per chapter
+   and give each question `part: <chapter number>`, so its page buttons only show that chapter's pages.
+   `number` stays a single number (the first chapter) so results save and group as before.
 
    Every question has a `type` key from TYPES below (the six comprehension skills, mapped to NSW English K–10 Stage 2).
    Formats:
@@ -44,6 +49,16 @@
   }
   function range(n) { var a = []; for (var i = 0; i < n; i++) a.push(i); return a; }
   function pageLabel(p) { return "p. " + p; }
+
+  /* ---------- Single chapter or combined page ---------- */
+  var PARTS = C.parts || [];
+  var LABEL = C.label || "Chapter " + C.number;
+  function partOf(q) {
+    for (var i = 0; i < PARTS.length; i++) if (PARTS[i].number === q.part) return PARTS[i];
+    return null;
+  }
+  function pagesFor(q) { var pt = partOf(q); return pt ? pt.pages : C.pages; }
+  function pageSpan(pages) { return pages[0] === pages[pages.length - 1] ? String(pages[0]) : pages[0] + "–" + pages[pages.length - 1]; }
 
   /* ---------- Matching typed sentence openings ---------- */
   function words(s) {
@@ -94,7 +109,7 @@
     return {
       id: state.submitId,
       result: {
-        chapter: C.number, chapterTitle: C.title, student: state.name,
+        chapter: C.number, chapterTitle: C.label ? C.label + ": " + C.title : C.title, student: state.name,
         autoScore: got, autoMax: autoTotal, writtenMax: writtenTotal, skills: skills,
         questions: state.results.map(function (r, k) {
           var q = r.q, o = { n: k + 1, skill: TYPES[q.type].name, format: q.format, prompt: plain(q.prompt), max: r.max };
@@ -158,11 +173,16 @@
       '<section class="sheet">' +
         '<h2 tabindex="-1" data-focus>Before you start</h2>' +
         '<div class="facts">' +
-          "<span>Pages <b>" + C.pages[0] + "–" + C.pages[C.pages.length - 1] + "</b></span>" +
+          (PARTS.length ? "<span><b>" + PARTS.length + "</b> chapters</span>" : "<span>Pages <b>" + pageSpan(C.pages) + "</b></span>") +
           "<span><b>" + C.questions.length + "</b> questions</span>" +
           "<span><b>" + (autoTotal + writtenTotal) + "</b> marks</span>" +
         "</div>" +
-        "<p>You will need your copy of <i>The Wild Robot</i>, open at Chapter " + C.number + ". Read the whole chapter first.</p>" +
+        (PARTS.length
+          ? "<p>You will need your copy of <i>The Wild Robot</i>. Read all of these chapters first. Each question tells you which chapter it is about.</p>" +
+            '<ul class="part-list">' + PARTS.map(function (pt) {
+              return '<li><span class="mono">Ch ' + pt.number + "</span><span>" + esc(pt.title) + '</span><span class="mono muted">pp. ' + pageSpan(pt.pages) + "</span></li>";
+            }).join("") + "</ul>"
+          : "<p>You will need your copy of <i>The Wild Robot</i>, open at Chapter " + C.number + ". Read the whole chapter first.</p>") +
         '<div class="howto">' +
           '<h3>For each question</h3>' +
           "<ol>" +
@@ -178,7 +198,7 @@
             "</select></div>"
           : '<div class="field"><label for="student-name">Your first name</label>' +
             '<input type="text" id="student-name" autocomplete="off" maxlength="30" value="' + esc(state.name) + '"></div>') +
-        '<div class="actions"><button class="btn" id="start-btn" disabled>Start Chapter ' + C.number + "</button></div>" +
+        '<div class="actions"><button class="btn" id="start-btn" disabled>Start ' + (PARTS.length ? "now" : "Chapter " + C.number) + "</button></div>" +
       "</section>"
     );
     var input = document.getElementById("student-name");
@@ -193,10 +213,12 @@
 
   /* ---------- Question shell ---------- */
   function shell(q, bodyHtml, marks) {
-    var n = state.i + 1, total = C.questions.length, t = TYPES[q.type];
+    var n = state.i + 1, total = C.questions.length, t = TYPES[q.type], pt = partOf(q);
+    var where = pt ? "Chapter " + pt.number + ": " + pt.title : (q.parts || "");
     return (
       '<div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + state.i + '"><div style="width:' + (state.i / total) * 100 + '%"></div></div>' +
-      '<div class="qmeta"><span>Question ' + n + " of " + total + '</span><span class="tag">' + esc(t.name) + "</span></div>" +
+      '<div class="qmeta"><span>Question ' + n + " of " + total + (where ? ' &middot; <b class="q-part">' + esc(where) + "</b>" : "") +
+        '</span><span class="tag">' + esc(t.name) + "</span></div>" +
       '<section class="sheet">' +
         '<div class="q-head"><h2 class="q-prompt" tabindex="-1" data-focus>' + q.prompt + '</h2><span class="marks" aria-label="' + marks + ' marks">/' + marks + "</span></div>" +
         bodyHtml +
@@ -246,7 +268,7 @@
           '<div class="proof-head"><h3>Find it first</h3><span class="marks">/1</span></div>' +
           '<p class="clue">' + q.find.clue + "</p>" +
           '<div class="find-step"><span class="step-lbl">Which page is the sentence on?</span>' +
-            '<div class="pages">' + C.pages.map(function (p) {
+            '<div class="pages">' + pagesFor(q).map(function (p) {
               return '<button class="page-btn" type="button" aria-pressed="false" data-page="' + p + '">' + pageLabel(p) + "</button>";
             }).join("") + "</div></div>" +
           '<div class="find-step"><label class="step-lbl" for="opening-' + state.i + '">Type the first three words of that sentence.</label>' +
@@ -479,7 +501,8 @@
       if (firstWrong === null) firstWrong = wrong;
       if (wrong) {
         btn.disabled = true;
-        showFeedback("bad", wrong + (wrong === 1 ? " animal is" : " animals are") + " in the wrong group.",
+        var noun = q.itemWord || ["animal", "animals"];
+        showFeedback("bad", wrong + " " + (wrong === 1 ? noun[0] + " is" : noun[1] + " are") + " in the wrong group.",
           "<p>The red rows need a new group. The green rows are locked in.</p><p>" + clueFor(q.hints, attempts) + "</p>");
         return;
       }
@@ -553,17 +576,17 @@
         } else if (q.format === "order") {
           detail = '<span class="' + (r.correct ? "r-good" : "r-bad") + '">' + (r.correct ? "All events in order on the first try." : "All events in order after " + ordinal(r.attempts) + ".") + "</span>";
         } else if (q.format === "sort") {
-          detail = '<span class="' + (r.correct ? "r-good" : "r-bad") + '">' + (r.correct ? "All animals sorted on the first try." : r.wrongCount + " in the wrong group at first; all sorted after " + ordinal(r.attempts) + ".") + "</span>";
+          detail = '<span class="' + (r.correct ? "r-good" : "r-bad") + '">' + (r.correct ? "All sorted on the first try." : r.wrongCount + " in the wrong group at first; all sorted after " + ordinal(r.attempts) + ".") + "</span>";
         }
       }
-      return '<li><span class="r-q">' + (k + 1) + ". " + q.prompt + '</span><span class="r-mark">' + mark + '</span><div class="r-detail">' + typeLine + detail + "</div></li>";
+      return '<li><span class="r-q">' + (k + 1) + ". " + (partOf(q) ? '<span class="r-part">Ch ' + q.part + "</span> " : "") + q.prompt + '</span><span class="r-mark">' + mark + '</span><div class="r-detail">' + typeLine + detail + "</div></li>";
     }).join("");
 
     setScreen(
       '<div class="progress"><div style="width:100%"></div></div>' +
       '<section class="sheet">' +
         '<h2 tabindex="-1" data-focus>Well done, ' + esc(state.name) + "!</h2>" +
-        '<p class="muted">Chapter ' + C.number + ": " + esc(C.title) + " · " + date + "</p>" +
+        '<p class="muted">' + esc(LABEL) + ": " + esc(C.title) + " · " + date + "</p>" +
         '<div class="score-row">' +
           '<div class="score"><span class="big">' + got + "/" + autoTotal + '</span><span class="lbl">Marked by the computer</span></div>' +
           (writtenTotal ? '<div class="score"><span class="big">__/' + writtenTotal + '</span><span class="lbl">Written answers, marked by your teacher</span></div>' : "") +
@@ -572,7 +595,7 @@
         '<p class="save-status" id="save-status" role="status"></p>' +
       "</section>" +
       '<section class="sheet"><h2>Your answers</h2><ol class="review">' + items + "</ol></section>" +
-      '<div class="actions"><a class="btn ghost" href="index.html">All chapters</a><button class="btn" id="again">Try this chapter again</button></div>'
+      '<div class="actions"><a class="btn ghost" href="index.html">All chapters</a><button class="btn" id="again">Try ' + (PARTS.length ? "these chapters" : "this chapter") + ' again</button></div>'
     );
     document.getElementById("again").onclick = renderStart;
     sendResults(buildPayload(got, byType), document.getElementById("save-status"));
