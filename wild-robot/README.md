@@ -18,7 +18,8 @@ Every chapter covers six reading skills: locating directly stated information, c
 |---|---|
 | `index.html` | Chapter list (student home page) |
 | `chapter-50.html`, `chapter-51.html` | One page per chapter: the questions are in the `window.CHAPTER` block |
-| `chapter-53.html`, `chapter-55.html`, `chapter-56.html`, `chapter-57.html` | One page per chapter (same format as Chapters 50 and 51) |
+| `chapter-53.html` | One page per chapter (same format as Chapters 50 and 51) |
+| `chapters-55-57.html` | One question set for the independent reading group Chapters 55–57 |
 | `quiz.js`, `quiz.css` | Shared quiz engine and styles |
 | `config.js` | Settings: Google Apps Script URL and optional class list |
 | `teacher.html`, `teacher.js` | Teacher results page (needs the teacher key) |
