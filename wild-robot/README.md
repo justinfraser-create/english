@@ -6,7 +6,7 @@ Year 4 comprehension quizzes for *The Wild Robot* by Peter Brown, aligned to NSW
 
 ## How a quiz works
 
-1. **Find it first.** Each question gives a clue. The student finds the sentence in their book, chooses its page and types its first three words. Wrong tries get stronger clues, but the sentence is never revealed, and the answers stay locked until they find it.
+1. **Find it first.** Each question gives a clue and tells the student which page to search. They find the sentence in their book and prove it by typing its first two words. Wrong tries get stronger clues, but the sentence is never revealed, and the answers stay locked until they find it.
 2. **Answer.** A wrong answer gets a clue, not the correct answer, and the student tries again until they get it right. Marks are only earned on the first try.
 3. **Written responses** are marked by the teacher on `teacher.html`.
 

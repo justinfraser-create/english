@@ -9,8 +9,8 @@
    Every question has a `type` key from TYPES below (the six comprehension skills, mapped to NSW English K–10 Stage 2).
    Formats:
      mc    – "Find it first" evidence step, then multiple choice. `find` = { clue, targets: [{ page, start }] }
-             `start` is the first few words of an acceptable sentence; students type the first three words of the
-             sentence they found in their book. Answers stay locked until the evidence is proved.
+             The engine tells the student which page to search on. `start` is the first words of an acceptable
+             sentence; students prove they found it by typing its first two words. Answers stay locked until then.
              `where` (position on the page) and `word` (a word in the sentence) feed the escalating clues.
      order – tap events into sequence
      sort  – put each item into a category
@@ -87,7 +87,7 @@
     return key.length >= 4 && lev(typed, key) <= 1;   // forgive one small spelling slip in longer words
   }
   function opensWith(typed, start) {
-    var t = words(typed), k = words(start).slice(0, 3);
+    var t = words(typed), k = words(start).slice(0, 2);
     if (t.length < k.length) return false;
     for (var i = 0; i < k.length; i++) if (!sameWord(t[i], k[i])) return false;
     return true;
@@ -193,8 +193,8 @@
         '<div class="howto">' +
           '<h3>For each question</h3>' +
           "<ol>" +
-            "<li><b>Find it first.</b> Read the clue, then find the sentence in your book that helps you answer.</li>" +
-            "<li><b>Prove it.</b> Choose the page, then type the first three words of that sentence.</li>" +
+            "<li><b>Find it first.</b> Read the clue, then search the page it tells you to use for the sentence that helps you answer.</li>" +
+            "<li><b>Prove it.</b> Type the first two words of that sentence.</li>" +
             "<li><b>Answer.</b> The answers unlock once you have proved your evidence. If you get stuck, you will get clues, but you must find the evidence yourself before you can move on.</li>" +
           "</ol>" +
         "</div>" +
@@ -269,6 +269,7 @@
 
   /* ---------- Find it first + multiple choice ---------- */
   function targetText(t) { return pageLabel(t.page) + ", the sentence beginning “" + esc(t.start) + "…”"; }
+  function findPage(q) { return q.find.targets[0].page; }   // each question has one target page, so students are told where to search
 
   function renderMC(q) {
     var marks = marksFor(qShape(q));
@@ -278,11 +279,8 @@
         '<div class="proof" id="find">' +
           '<div class="proof-head"><h3>Find it first</h3><span class="marks">/1</span></div>' +
           '<p class="clue">' + q.find.clue + "</p>" +
-          '<div class="find-step"><span class="step-lbl">Which page is the sentence on?</span>' +
-            '<div class="pages">' + pagesFor(q).map(function (p) {
-              return '<button class="page-btn" type="button" aria-pressed="false" data-page="' + p + '">' + pageLabel(p) + "</button>";
-            }).join("") + "</div></div>" +
-          '<div class="find-step"><label class="step-lbl" for="opening-' + state.i + '">Type the first three words of that sentence.</label>' +
+          '<div class="find-step"><span class="step-lbl">Search on ' + pageLabel(findPage(q)) + " in your book.</span></div>" +
+          '<div class="find-step"><label class="step-lbl" for="opening-' + state.i + '">Type the first two words of that sentence.</label>' +
             '<div class="find-row"><input type="text" id="opening-' + state.i + '" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60">' +
             '<button class="btn proof-btn" type="button" id="find-btn" disabled>Check my evidence</button></div></div>' +
           '<p class="find-msg" id="find-msg" role="status" hidden></p>' +
@@ -298,7 +296,7 @@
         '<div class="options">' + opts + "</div>" +
       "</div>", marks));
 
-    var choice = null, page = null, tries = 0, found = !q.find, findScore = 0, foundTarget = null;
+    var choice = null, page = q.find ? findPage(q) : null, tries = 0, found = !q.find, findScore = 0, foundTarget = null;
     var btn = document.getElementById("main-btn");
     var optBtns = app.querySelectorAll(".opt");
     function ready() { btn.disabled = !found || choice === null; }
@@ -318,7 +316,6 @@
       var note = document.getElementById("lock-note");
       if (note) note.hidden = true;
       optBtns.forEach(function (o) { o.disabled = false; });
-      app.querySelectorAll(".page-btn").forEach(function (o) { o.disabled = true; });
       var inp = document.getElementById("opening-" + state.i);
       inp.readOnly = true;
       document.getElementById("find-btn").hidden = true;
@@ -327,26 +324,18 @@
     }
 
     if (q.find) {
-      var pageBtns = app.querySelectorAll(".page-btn");
       var inp = document.getElementById("opening-" + state.i);
       var findBtn = document.getElementById("find-btn");
       var msg = document.getElementById("find-msg");
       var box = document.getElementById("find");
-      function findReady() { findBtn.disabled = page === null || words(inp.value).length < 1; }
-      pageBtns.forEach(function (b) {
-        b.addEventListener("click", function () {
-          page = +b.dataset.page;
-          pageBtns.forEach(function (o) { o.setAttribute("aria-pressed", o === b ? "true" : "false"); });
-          findReady();
-        });
-      });
+      function findReady() { findBtn.disabled = words(inp.value).length < 2; }
       inp.addEventListener("input", findReady);
       inp.addEventListener("keydown", function (e) { if (e.key === "Enter" && !findBtn.disabled) findBtn.click(); });
       findBtn.addEventListener("click", function () {
         tries++;
-        var hit = null, sentenceElsewhere = false;
+        var hit = null;
         q.find.targets.forEach(function (t) {
-          if (opensWith(inp.value, t.start)) { if (t.page === page) hit = hit || t; else sentenceElsewhere = true; }
+          if (t.page === page && opensWith(inp.value, t.start)) hit = hit || t;
         });
         msg.hidden = false;
         if (hit) {
@@ -362,17 +351,13 @@
         // Not found yet: students cannot move on. Each wrong try adds a stronger clue, but never the sentence itself.
         msg.className = "find-msg bad";
         var t0 = q.find.targets[0];
-        var onRightPage = q.find.targets.some(function (t) { return t.page === page; });
         var first = words(t0.start)[0].charAt(0).toUpperCase();
         var tip;
-        if (sentenceElsewhere) tip = "You found a good sentence, but check the page number.";
-        else if (tries === 1) tip = onRightPage
-          ? "Right page! Reread the sentences on it. Which one matches the clue? Check you typed its first three words."
-          : "The evidence isn’t on that page. Skim the other pages and look for words from the clue.";
-        else if (tries === 2) tip = "Clue: the evidence is on " + pageLabel(t0.page) + ". Read that page slowly, one sentence at a time.";
-        else if (tries === 3) tip = "Clue: look " + q.find.where + " of " + pageLabel(t0.page) + ".";
-        else if (q.find.last) tip = "Clue: look " + q.find.where + " of " + pageLabel(t0.page) + ". " + q.find.last;
-        else tip = "Clue: look " + q.find.where + " of " + pageLabel(t0.page) + " for a sentence that begins with the letter “" + first + "” and uses the word “" + esc(q.find.word) + "”.";
+        if (tries === 1) tip = "Reread the sentences on " + pageLabel(page) + ". Which one matches the clue? Check you typed its first two words.";
+        else if (tries === 2) tip = "Clue: read " + pageLabel(page) + " slowly, one sentence at a time.";
+        else if (tries === 3) tip = "Clue: look " + q.find.where + " of " + pageLabel(page) + ".";
+        else if (q.find.last) tip = "Clue: look " + q.find.where + " of " + pageLabel(page) + ". " + q.find.last;
+        else tip = "Clue: look " + q.find.where + " of " + pageLabel(page) + " for a sentence that begins with the letter “" + first + "” and uses the word “" + esc(q.find.word) + "”.";
         msg.innerHTML = '<span class="try">Try ' + tries + "</span> " + tip + " Keep looking. You can’t move on until you find it.";
         inp.select();
         inp.focus();
