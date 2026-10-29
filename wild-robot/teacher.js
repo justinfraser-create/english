@@ -93,7 +93,7 @@
   function chapterRows() {
     var list = rows.filter(function (r) { return Number(r.chapter) === chapter; });
     list.sort(function (a, b) {
-      return String(a.student).localeCompare(String(b.student)) || String(a.submitted).localeCompare(String(b.submitted));
+      return String(a.student).localeCompare(String(b.student), undefined, { numeric: true }) || String(a.submitted).localeCompare(String(b.submitted));
     });
     var count = {};
     list.forEach(function (r) {

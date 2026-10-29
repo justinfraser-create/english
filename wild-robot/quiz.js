@@ -203,14 +203,18 @@
             '<select id="student-name"><option value="">Choose\u2026</option>' +
             CLASS.map(function (n) { return '<option' + (n === state.name ? " selected" : "") + ">" + esc(n) + "</option>"; }).join("") +
             "</select></div>"
-          : '<div class="field"><label for="student-name">Your first name</label>' +
-            '<input type="text" id="student-name" autocomplete="off" maxlength="30" value="' + esc(state.name) + '"></div>') +
+          : '<div class="field"><label for="student-name">Your student number</label>' +
+            '<input type="text" id="student-name" inputmode="numeric" autocomplete="off" maxlength="2" placeholder="e.g. 7" value="' + esc(state.name) + '"></div>') +
         '<div class="actions"><button class="btn" id="start-btn" disabled>Start ' + (PARTS.length ? "now" : "Chapter " + C.number) + "</button></div>" +
       "</section>"
     );
     var input = document.getElementById("student-name");
     var btn = document.getElementById("start-btn");
-    function sync() { btn.disabled = input.value.trim().length < 2; }
+    // Without a class list, students type a student number: 1 or 2 digits only.
+    function sync() {
+      if (!CLASS.length) input.value = input.value.replace(/\D/g, "").slice(0, 2);
+      btn.disabled = CLASS.length ? input.value.trim().length < 2 : !/^\d{1,2}$/.test(input.value);
+    }
     input.addEventListener("input", sync);
     input.addEventListener("change", sync);
     input.addEventListener("keydown", function (e) { if (e.key === "Enter" && !btn.disabled) btn.click(); });
@@ -592,7 +596,7 @@
     setScreen(
       '<div class="progress"><div style="width:100%"></div></div>' +
       '<section class="sheet">' +
-        '<h2 tabindex="-1" data-focus>Well done, ' + esc(state.name) + "!</h2>" +
+        '<h2 tabindex="-1" data-focus>Well done' + (CLASS.length ? ", " + esc(state.name) : "") + "!</h2>" +
         '<p class="muted">' + esc(LABEL) + ": " + esc(C.title) + " · " + date + "</p>" +
         '<div class="score-row">' +
           '<div class="score"><span class="big">' + got + "/" + autoTotal + '</span><span class="lbl">Marked by the computer</span></div>' +
